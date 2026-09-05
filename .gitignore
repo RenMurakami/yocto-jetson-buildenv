@@ -1,0 +1,22 @@
+# Yocto sources - fetched, never committed
+tegra-demo-distro/
+repos/
+layers/
+build*/
+tmp/
+sstate-cache/
+downloads/
+
+# WSL / editor noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local caches
+.cache/
+
+# Secrets - never
+*.key
+*.pem
+.env
