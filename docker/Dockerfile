@@ -5,8 +5,9 @@ FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Official Yocto 6.0 Ubuntu/Debian package list, verbatim, plus python3-websockets
-# (docs.yoctoproject.org/6.0/ref-manual/system-requirements.html)
+# Official Yocto 6.0 Ubuntu/Debian package list, verbatim, minus python3-websockets
+# (docs.yoctoproject.org/6.0/ref-manual/system-requirements.html) - the archive
+# version is too old, so it comes from pip on the next line instead.
 RUN apt-get update && apt-get install -y \
     build-essential chrpath cpio debianutils diffstat file gawk gcc git \
     iputils-ping libacl1 libcrypt-dev locales python3 python3-git \

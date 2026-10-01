@@ -15,16 +15,24 @@ Any Jetson project can consume this — it does not carry product-specific code 
 |---|---|
 | `docker/Dockerfile` | Ubuntu 24.04 + the official Yocto 6.0 package list + OE4T flash prerequisites + kas |
 | `docker/entrypoint.sh` | Creates a user matching your host UID/GID at container start; bitbake refuses to run as root |
-| `docker/site.conf` | Copied to `~/.yocto/site.conf`; `tegra-demo-distro`'s `setup-env` auto-links it into every build directory (shared `DL_DIR`/`SSTATE_DIR`, extra `IMAGE_FSTYPES`) |
+| `docker/site.conf` | Copied to `~/.yocto/site.conf`; `tegra-demo-distro`'s `setup-env` auto-links it into every build directory (shared `DL_DIR`/`SSTATE_DIR`, hash-equivalence DB, extra `IMAGE_FSTYPES`) |
 | `docker/yocto-shell.sh` | One command to enter the container with your UID/GID and the persistent caches bind-mounted |
-| `docs/BUILD-ENVIRONMENT.md` | Authoritative host/flash-host requirements (disk, RAM, packages, tool versions, locale, checklist) |
-| `docs/yocto-jetson-roadmap-r39-v2.md` | Full build-to-flash roadmap (§0 build host, Phase 1–7); referenced by consuming projects |
 | `docs/layer-pins-wrynose.md` | Exact `tegra-demo-distro` submodule commits at the time of the last M0 verification |
 | `kas/` | Reserved for reproducible kas configurations (added once a consuming project needs CI) |
 
-## Quick start
+## Requirements
 
-Full instructions in `docs/BUILD-ENVIRONMENT.md`. Short version:
+| | |
+|---|---|
+| Disk | ~250 GB per build tree, plus the shared caches (currently ~66 GB) |
+| RAM | 16 GB minimum, 32 GB comfortable |
+| Host packages | Docker only — everything else lives in the image |
+| Caches | `/srv/yocto/downloads` and `/srv/yocto/sstate-cache`, owned by your user |
+
+Keep the build tree and the caches on a native Linux filesystem. On WSL2 that
+means under `~` and `/srv`, never `/mnt/c`.
+
+## Quick start
 
 ```bash
 git clone <this-repo> && cd yocto-jetson-buildenv
@@ -34,15 +42,46 @@ sudo mkdir -p /srv/yocto/{downloads,sstate-cache} && sudo chown -R "$USER" /srv/
 /path/to/yocto-jetson-buildenv/docker/yocto-shell.sh      # → prompt inside the container, cwd = ~/yocto
 ```
 
-Then verify with the M0 checklist in `docs/BUILD-ENVIRONMENT.md` §9.
+`yocto-shell.sh` bind-mounts the directory you run it from as `/work`, so run it
+from the top of your build tree — not from inside `docker/`.
 
-## Notes for specific hosts
+It honours three environment variables: `YOCTO_IMAGE` (default
+`yocto-jetson:wrynose`), `YOCTO_WORK` (default `$PWD`) and `YOCTO_CACHE`
+(default `/srv/yocto`).
 
-- **Ubuntu 22.04 build host:** the Yocto docs require a newer `python3-websockets` than apt provides on 22.04. In the Dockerfile, remove `python3-websockets` from the apt list and install it via pip instead: `RUN pip3 install --no-cache-dir --break-system-packages 'websockets>=10'`.
-- **Windows 11 + WSL2:** keep sources and caches on the WSL ext4 filesystem (`~` and `/srv/yocto`), never under `/mnt/c` (slow and case-insensitive).
+### Verifying the container
+
+Inside the container, all four of these should hold:
+
+```bash
+id                                   # your host UID/GID, not root
+echo $LANG                           # en_US.UTF-8 - bitbake requires it
+cat ~/.yocto/site.conf               # installed by the entrypoint
+touch /srv/yocto/downloads/.w && rm /srv/yocto/downloads/.w   # caches writable
+```
+
+`bitbake` is not on `PATH` until you source a build tree's `setup-env`; `kas` is
+at `/usr/local/bin/kas`.
+
+## Notes
+
+- **`websockets`:** the Yocto 6.0 package list calls for `python3-websockets`,
+  but the version in Ubuntu's archive is too old. The Dockerfile installs it
+  with pip (`'websockets>=10'`) instead, unconditionally, so this works the same
+  on any Ubuntu base.
+- **`site.conf` changes require an image rebuild.** It is baked into the image at
+  `/opt/yocto/site.conf` and copied to `~/.yocto/site.conf` on every container
+  start. Editing the repo copy alone changes nothing until you re-run
+  `docker build`.
+- **Windows 11 + WSL2:** keep sources and caches on the WSL ext4 filesystem
+  (`~` and `/srv/yocto`), never under `/mnt/c` (slow and case-insensitive).
 
 ## Consuming projects
 
-Product-specific layers (`meta-<product>`), applications, DBCs, vehicle notes, and CI live in their own repositories. Each consumer clones this repo alongside its own tree and points `yocto-shell.sh` at it. Current consumers:
+Product-specific layers (`meta-<product>`), applications, DBCs, vehicle notes,
+and CI live in their own repositories. Each consumer clones this repo alongside
+its own tree and points `yocto-shell.sh` at it. Current consumers:
 
-- Deer detection ECU (Honda Civic thermal-camera project) — private
+- **Deer detection ECU** (Honda Civic thermal-camera project) — `meta-deer`, private.
+  Provides the `deer` distro, the `deer-orin-nano-sd` machine and the images;
+  consumes this repo for the container and the shared caches.
