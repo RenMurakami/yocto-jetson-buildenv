@@ -82,6 +82,6 @@ Product-specific layers (`meta-<product>`), applications, DBCs, vehicle notes,
 and CI live in their own repositories. Each consumer clones this repo alongside
 its own tree and points `yocto-shell.sh` at it. Current consumers:
 
-- **Deer detection ECU** (Honda Civic thermal-camera project) — `meta-deer`, private.
-  Provides the `deer` distro, the `deer-orin-nano-sd` machine and the images;
+- **Sloth** (Honda Civic thermal-camera deer detection ECU) — `meta-sloth`, private.
+  Provides the `sloth` distro, the `sloth-orin-nano-sd` machine and the images;
   consumes this repo for the container and the shared caches.

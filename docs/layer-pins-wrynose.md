@@ -13,4 +13,4 @@ meta-tegra README: Jetson Linux R39.2.1 / JetPack 7.2.1 (matches board).
 | meta-swupdate         | c0658455606b3a37d85d7cf03703d8b8d2ead667    |
 
 These are the tegra-demo-distro wrynose submodule tips as of 2026-09-05.
-The kas file (kas/deer-orin-nano.yml) will pin against this same set.
+The kas file (kas/sloth-orin-nano.yml) will pin against this same set.

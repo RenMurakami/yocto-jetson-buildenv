@@ -1,4 +1,4 @@
-# Yocto build host for the Deer Detection ECU
+# Yocto build host for Jetson Orin Nano product layers (first consumer: meta-sloth)
 # Target: Jetson Orin Nano Super Dev Kit, meta-tegra "wrynose" (L4T R39.2.1 / JetPack 7.2.1)
 # Base: Ubuntu 24.04 LTS - on the Yocto 6.0 "wrynose" supported-distribution list.
 FROM ubuntu:24.04
