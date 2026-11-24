@@ -36,8 +36,10 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     LANGUAGE=en_US:en
 
-# kas: reproducible layer checkout + build driver (used for CI later; harmless now)
-RUN pip3 install --no-cache-dir --break-system-packages kas
+# kas: reproducible layer checkout + build driver.  Pinned: a rebuilt image must
+# not pick up a newer kas that reads the kas files differently.  5.5 is the
+# version the builds so far used.  Raise it on purpose, then rebuild the image.
+RUN pip3 install --no-cache-dir --break-system-packages kas==5.5
 
 # Ubuntu 24.04 images ship a default "ubuntu" user with UID 1000. Remove it so the
 # entrypoint can create a user with YOUR host UID/GID (usually also 1000) cleanly.

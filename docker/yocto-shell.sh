@@ -10,7 +10,15 @@ CACHE="${YOCTO_CACHE:-/srv/yocto}"
 
 mkdir -p "$CACHE/downloads" "$CACHE/sstate-cache"
 
-exec docker run --rm -it \
+# A terminal (-t) only when there is one.  Scripts that run a command through
+# this file (e.g. meta-sloth/scripts/sloth-pipeline) capture its output, and
+# docker refuses -t when stdin is not a terminal.
+tty=()
+if [ -t 0 ] && [ -t 1 ]; then
+  tty=(-t)
+fi
+
+exec docker run --rm -i "${tty[@]}" \
   --hostname yocto-build \
   -e HOST_UID="$(id -u)" \
   -e HOST_GID="$(id -g)" \
